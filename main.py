@@ -4,54 +4,67 @@ import time
 
 pygame.init()
 
-SCREEN_SIZE = 400
+SCREEN_SIZE = 600
 GRID_SIZE = 4
 TILE_SIZE = SCREEN_SIZE // GRID_SIZE
-BACKGROUND_COLOR = (187, 173, 160)
+BACKGROUND_COLOR = (30, 30, 30)
 TILE_COLORS = {
-    2: (238, 228, 218),
-    4: (237, 224, 200),
-    8: (242, 177, 121),
-    16: (245, 149, 99),
-    32: (246, 124, 95),
-    64: (246, 94, 59),
-    128: (237, 207, 114),
-    256: (237, 204, 97),
-    512: (237, 200, 80),
-    1024: (237, 197, 63),
-    2048: (237, 194, 46)
+    0: (50, 50, 50),
+    2: (255, 87, 34),
+    4: (255, 195, 0),
+    8: (244, 67, 54),
+    16: (76, 175, 80),
+    32: (33, 150, 243),
+    64: (156, 39, 176),
+    128: (63, 81, 181),
+    256: (0, 188, 212),
+    512: (3, 169, 244),
+    1024: (0, 150, 136),
+    2048: (255, 235, 59)
 }
-FONT_COLOR = (119, 110, 101)
+FONT_COLOR = (255, 255, 255)
 TIMER_FONT_COLOR = (255, 255, 255)
 SCORE_FONT_COLOR = (255, 255, 255)
-
 
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 pygame.display.set_caption("2048")
 
-
 font = pygame.font.Font(None, 55)
 timer_font = pygame.font.Font(None, 36)
 score_font = pygame.font.Font(None, 36)
-
 
 STATE_HOME = 0
 STATE_GAME = 1
 STATE_INSTRUCTIONS = 2
 STATE_GAME_OVER = 3
 
-def draw_board(board, score):
+ANIMATION_TIME = 200
+
+def draw_board(board, score, moving_tiles, elapsed_time, animations_enabled):
     screen.fill(BACKGROUND_COLOR)
     for i in range(GRID_SIZE):
         for j in range(GRID_SIZE):
             tile_value = board[i][j]
             tile_color = TILE_COLORS.get(tile_value, (60, 58, 50))
-            pygame.draw.rect(screen, tile_color,
-                             (j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+            pygame.draw.rect(screen, tile_color, (j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE))
             if tile_value != 0:
                 text = font.render(str(tile_value), True, FONT_COLOR)
                 text_rect = text.get_rect(center=(j * TILE_SIZE + TILE_SIZE // 2, i * TILE_SIZE + TILE_SIZE // 2))
                 screen.blit(text, text_rect)
+
+    if animations_enabled:
+        for (start_pos, end_pos, value) in moving_tiles:
+            start_x, start_y = start_pos
+            end_x, end_y = end_pos
+            progress = min(elapsed_time / ANIMATION_TIME, 1)
+            current_x = start_x + (end_x - start_x) * progress
+            current_y = start_y + (end_y - start_y) * progress
+            tile_color = TILE_COLORS.get(value, (60, 58, 50))
+            pygame.draw.rect(screen, tile_color, (current_x * TILE_SIZE, current_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+            text = font.render(str(value), True, FONT_COLOR)
+            text_rect = text.get_rect(center=(current_x * TILE_SIZE + TILE_SIZE // 2, current_y * TILE_SIZE + TILE_SIZE // 2))
+            screen.blit(text, text_rect)
+
     score_text = score_font.render(f"Score: {score}", True, SCORE_FONT_COLOR)
     screen.blit(score_text, (SCREEN_SIZE - 150, 10))
     pygame.display.flip()
@@ -74,6 +87,7 @@ def slide_left(row):
     last = -1
     pos = 0
     score = 0
+    moves = []
     for j in range(GRID_SIZE):
         if row[j] != 0:
             if last == row[j]:
@@ -82,20 +96,25 @@ def slide_left(row):
                 last = -1
             else:
                 new_row[pos] = row[j]
+                if pos != j:
+                    moves.append((j, pos))
                 last = row[j]
                 pos += 1
-    return new_row, score
+    return new_row, score, moves
 
 def move_left(board):
     new_board = []
     score = 0
-    for row in board:
-        new_row, row_score = slide_left(row)
+    moves = []
+    for i, row in enumerate(board):
+        new_row, row_score, row_moves = slide_left(row)
         new_board.append(new_row)
         score += row_score
+        for j, k in row_moves:
+            moves.append(((i, j), (i, k), row[j]))
     if new_board != board:
         add_random_tile(new_board)
-    return new_board, score
+    return new_board, score, moves
 
 def reverse(board):
     new_board = [row[::-1] for row in board]
@@ -107,18 +126,24 @@ def transpose(board):
 
 def move_right(board):
     reversed_board = reverse(board)
-    new_board, score = move_left(reversed_board)
-    return reverse(new_board), score
+    new_board, score, moves = move_left(reversed_board)
+    new_board = reverse(new_board)
+    moves = [((x, GRID_SIZE - 1 - y1), (x, GRID_SIZE - 1 - y2), value) for ((x, y1), (x, y2), value) in moves]
+    return new_board, score, moves
 
 def move_up(board):
     transposed_board = transpose(board)
-    new_board, score = move_left(transposed_board)
-    return transpose(new_board), score
+    new_board, score, moves = move_left(transposed_board)
+    new_board = transpose(new_board)
+    moves = [((y, x1), (y, x2), value) for ((x1, y), (x2, y), value) in moves]
+    return new_board, score, moves
 
 def move_down(board):
     transposed_board = transpose(board)
-    new_board, score = move_right(transposed_board)
-    return transpose(new_board), score
+    new_board, score, moves = move_right(transposed_board)
+    new_board = transpose(new_board)
+    moves = [((y, x1), (y, x2), value) for ((x1, y), (x2, y), value) in moves]
+    return new_board, score, moves
 
 def draw_home_page():
     screen.fill(BACKGROUND_COLOR)
@@ -138,7 +163,9 @@ def draw_instructions_page():
         "Use arrow keys to move tiles.",
         "Tiles with the same number merge",
         "into one when they touch.",
-        "Add them up to reach 2048!"
+        "Add them up to reach 2048!",
+        "",
+        "Press D to toggle animations."
     ]
     y = 50
     for line in instructions:
@@ -164,6 +191,9 @@ def main():
     board = initialize_board()
     score = 0
     start_time = time.time()
+    moving_tiles = []
+    animation_start_time = None
+    animations_enabled = True
     running = True
 
     while running:
@@ -171,7 +201,10 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if state == STATE_HOME:
+                if event.key == pygame.K_d:
+                    animations_enabled = not animations_enabled
+                    moving_tiles = []
+                elif state == STATE_HOME:
                     if event.key == pygame.K_RETURN:
                         state = STATE_GAME
                         board = initialize_board()
@@ -186,25 +219,35 @@ def main():
                     if event.key == pygame.K_RETURN:
                         state = STATE_HOME
                 elif state == STATE_GAME:
-                    if event.key == pygame.K_LEFT:
-                        board, move_score = move_left(board)
-                        score += move_score
-                    elif event.key == pygame.K_RIGHT:
-                        board, move_score = move_right(board)
-                        score += move_score
-                    elif event.key == pygame.K_UP:
-                        board, move_score = move_up(board)
-                        score += move_score
-                    elif event.key == pygame.K_DOWN:
-                        board, move_score = move_down(board)
-                        score += move_score
+                    if not moving_tiles:
+                        if event.key == pygame.K_LEFT:
+                            board, move_score, moves = move_left(board)
+                        elif event.key == pygame.K_RIGHT:
+                            board, move_score, moves = move_right(board)
+                        elif event.key == pygame.K_UP:
+                            board, move_score, moves = move_up(board)
+                        elif event.key == pygame.K_DOWN:
+                            board, move_score, moves = move_down(board)
+                        if moves:
+                            score += move_score
+                            moving_tiles = moves
+                            if animations_enabled:
+                                animation_start_time = pygame.time.get_ticks()
+                            else:
+                                moving_tiles = [] 
 
         if state == STATE_HOME:
             draw_home_page()
         elif state == STATE_INSTRUCTIONS:
             draw_instructions_page()
         elif state == STATE_GAME:
-            draw_board(board, score)
+            if animations_enabled and moving_tiles:
+                elapsed_time = pygame.time.get_ticks() - animation_start_time
+                if elapsed_time >= ANIMATION_TIME:
+                    moving_tiles = []
+                draw_board(board, score, moving_tiles, elapsed_time, animations_enabled)
+            else:
+                draw_board(board, score, [], 0, animations_enabled)
             current_time = time.time()
             elapsed_time = current_time - start_time
             timer_text = timer_font.render(f"Time: {int(elapsed_time)}s", True, TIMER_FONT_COLOR)
