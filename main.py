@@ -76,15 +76,17 @@ def draw_board(board, score, moving_tiles, elapsed_time, animations_enabled):
                 draw_text(str(tile_value), 55, FONT_COLOR, (j * TILE_SIZE + TILE_SIZE // 2, i * TILE_SIZE + TILE_SIZE // 2))
 
     if animations_enabled:
-        for (start_pos, end_pos, value) in moving_tiles:
-            start_x, start_y = start_pos
-            end_x, end_y = end_pos
-            progress = min(elapsed_time / ANIMATION_TIME, 1)
-            current_x = start_x + (end_x - start_x) * progress
-            current_y = start_y + (end_y - start_y) * progress
-            tile_color = TILE_COLORS.get(value, (60, 58, 50))
-            pygame.draw.rect(screen, tile_color, (current_x * TILE_SIZE, current_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-            draw_text(str(value), 55, FONT_COLOR, (current_x * TILE_SIZE + TILE_SIZE // 2, current_y * TILE_SIZE + TILE_SIZE // 2))
+        for tile in moving_tiles:
+            if len(tile) == 3:
+                start_pos, end_pos, value = tile
+                start_x, start_y = start_pos
+                end_x, end_y = end_pos
+                progress = min(elapsed_time / ANIMATION_TIME, 1)
+                current_x = start_x + (end_x - start_x) * progress
+                current_y = start_y + (end_y - start_y) * progress
+                tile_color = TILE_COLORS.get(value, (60, 58, 50))
+                pygame.draw.rect(screen, tile_color, (current_x * TILE_SIZE, current_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                draw_text(str(value), 55, FONT_COLOR, (current_x * TILE_SIZE + TILE_SIZE // 2, current_y * TILE_SIZE + TILE_SIZE // 2))
 
     draw_text(f"Score: {score}", 36, SCORE_FONT_COLOR, (SCREEN_SIZE - 150, 10), center=False)
     pygame.display.flip()
@@ -221,52 +223,45 @@ def main():
                 elif state == STATE_INSTRUCTIONS:
                     if event.key == pygame.K_RETURN:
                         state = STATE_HOME
+                elif state == STATE_GAME:
+                    if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
+                        direction_map = {
+                            pygame.K_LEFT: 'left',
+                            pygame.K_RIGHT: 'right',
+                            pygame.K_UP: 'up',
+                            pygame.K_DOWN: 'down'
+                        }
+                        direction = direction_map[event.key]
+                        board, move_score, move_tiles = move(board, direction)
+                        score += move_score
+                        if animations_enabled:
+                            moving_tiles = [((j, i), (move_tiles[j], i), board[i][move_tiles[j]]) for i in range(GRID_SIZE) for j in range(GRID_SIZE) if board[i][move_tiles[j]] != 0]
+                            animation_start_time = time.time()
+                        else:
+                            moving_tiles = []
+                        sounds['move'].play()
+                        if any(2048 in row for row in board):
+                            state = STATE_GAME_OVER
+                            sounds['game_over'].play()
+                    elif event.key == pygame.K_r:
+                        state = STATE_HOME
                 elif state == STATE_GAME_OVER:
                     if event.key == pygame.K_RETURN:
                         state = STATE_HOME
-                        sounds['game_start'].play()
-                elif state == STATE_GAME:
-                    if not moving_tiles:
-                        if event.key == pygame.K_LEFT:
-                            board, move_score, moves = move(board, 'left')
-                        elif event.key == pygame.K_RIGHT:
-                            board, move_score, moves = move(board, 'right')
-                        elif event.key == pygame.K_UP:
-                            board, move_score, moves = move(board, 'up')
-                        elif event.key == pygame.K_DOWN:
-                            board, move_score, moves = move(board, 'down')
-                        if moves:
-                            score += move_score
-                            moving_tiles = moves
-                            sounds['move'].play()
-                            if animations_enabled:
-                                animation_start_time = pygame.time.get_ticks()
-                            else:
-                                moving_tiles = []
+
+        if state == STATE_GAME and animations_enabled and moving_tiles:
+            elapsed_time = time.time() - animation_start_time
+        else:
+            elapsed_time = 0
 
         if state == STATE_HOME:
             draw_home_page()
         elif state == STATE_INSTRUCTIONS:
             draw_instructions_page()
         elif state == STATE_GAME:
-            if animations_enabled and moving_tiles:
-                elapsed_time = pygame.time.get_ticks() - animation_start_time
-                if elapsed_time >= ANIMATION_TIME:
-                    moving_tiles = []
-                draw_board(board, score, moving_tiles, elapsed_time, animations_enabled)
-            else:
-                draw_board(board, score, [], 0, animations_enabled)
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            draw_text(f"Time: {int(elapsed_time)}s", 36, TIMER_FONT_COLOR, (10, 10), center=False)
-            pygame.display.flip()
-            if all(tile != 0 for row in board for tile in row):
-                state = STATE_GAME_OVER
-                sounds['game_over'].play()
+            draw_board(board, score, moving_tiles, elapsed_time, animations_enabled)
         elif state == STATE_GAME_OVER:
             draw_game_over_page(score)
-
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
