@@ -1,0 +1,22 @@
+# 2048 Game - Version 0.1.0
+
+## Features:
+
+- Classic 2048 gameplay implemented using Python and Pygame.
+- Smooth animations and background music.
+- Instructions and Game Over screen.
+- Toggle animations with the `D` key.
+
+## Dependencies:
+
+- Python 3.11.6
+- Pygame 2.5.0
+
+## Installation:
+
+1. Install dependencies using `requirements.txt` or `poetry.lock`.
+2. Run the game with the provided `.bat` (Windows) or `.sh` (Unix) script.
+
+## Known Issues:
+
+- None at the moment.

@@ -1,86 +1,90 @@
 # 2048 Game
 
-Welcome to the 2048 game! This is a clone of the popular 2048 puzzle game, built using Pygame. The objective of the game is to slide numbered tiles on a grid to combine them and create a tile with the number 2048.
+## Overview
+
+Welcome to the 2048 game, a classic puzzle game built with Python and Pygame. The objective is simple: slide numbered tiles on a grid to combine them and create a tile with the number 2048. This project features smooth animations, background music, and a user-friendly interface.
 
 ## Features
 
-- **Smooth Animations**: Enjoy a seamless gameplay experience with smooth tile animations.
-- **Sound Effects**: The game includes various sound effects for actions like moves, game start, and game over.
-- **Intuitive Controls**: Use the arrow keys to move the tiles.
-- **Score Tracking**: Keep track of your score as you play.
+- Classic 2048 gameplay
+- Smooth animations with the option to toggle them
+- Background music and sound effects
+- Instructions and Game Over screens
+- Timer and score tracking
 
-## Getting Started
+## Installation
 
-### Prerequisites
+### Requirements
 
-Ensure you have Python and Pygame installed on your system.
+- Python 3.11.6 or higher
+- Pygame 2.5.0
 
-You can install Pygame using pip:
+### Setup
 
-```bash
-pip install pygame
-```
-
-### Running the Game
-
-1. Clone the repository:
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/sayhan1610/2048.git
    cd 2048
    ```
 
-2. Run the game:
+2. **Using `requirements.txt`:**
+
+   Install the required dependencies with pip:
+
    ```bash
-   python main.py
+   pip install -r requirements.txt
    ```
 
-### Game Instructions
+3. **Using Poetry:**
 
-- **Move Tiles**: Use the arrow keys (↑, ↓, ←, →) to move the tiles.
-- **Objective**: Merge the tiles to reach the 2048 tile.
-- **Toggle Animations**: Press `D` to enable or disable tile animations.
-- **Home Screen**: Press `Enter` to start the game from the home screen.
-- **Instructions Screen**: Press `I` on the home screen to view the instructions.
-- **Game Over**: When the game is over, press `Enter` to restart the game.
+   If you prefer using Poetry, ensure it is installed and then run:
 
-## Code Overview
+   ```bash
+   poetry install
+   ```
 
-### Main Components
+## Running the Game
 
-- **Game State Management**: The game uses different states such as home, game, instructions, and game over to manage the game flow.
-- **Tile Animations**: Animations for moving tiles are implemented for a smooth user experience.
-- **Sound Effects**: Various sound effects are included to enhance the gameplay.
+### On Windows
 
-### Key Functions
+Double-click the `for_windows.bat` file or run the following command in the terminal:
 
-- `initialize_board()`: Initializes the game board with two random tiles.
-- `add_random_tile(board)`: Adds a random tile (2 or 4) to an empty spot on the board.
-- `move_left(board)`, `move_right(board)`, `move_up(board)`, `move_down(board)`: Functions to handle the movement and merging of tiles in different directions.
-- `draw_board(board, score, moving_tiles, elapsed_time, animations_enabled)`: Renders the game board and tiles.
-- `draw_home_page()`, `draw_instructions_page()`, `draw_game_over_page(score)`: Functions to render different game screens.
+```batch
+for_windows.bat
+```
 
-### Sound Files
+### On Unix-based systems (Linux/MacOS)
 
-- **game_start.mp3**: Played when the game starts.
-- **bg_music.mp3**: Background music played during the game.
-- **move.mp3**: Played when tiles are moved.
-- **game_over.mp3**: Played when the game is over.
+Run the following command in the terminal:
 
-### Dependencies
+```bash
+./for_unix.sh
+```
 
-- `pygame`: The game is built using the Pygame library for Python.
+## How to Play
 
-## Contributing
+- Use the arrow keys to slide the tiles in the desired direction.
+- Tiles with the same number merge into one when they touch.
+- Combine tiles to reach the 2048 tile and win the game!
 
-Feel free to fork the repository and submit pull requests. Contributions, whether it's improving the code, adding features, or fixing bugs, are welcome!
+### Controls
+
+- **Arrow Keys**: Move tiles
+- **D**: Toggle animations
+- **Enter**: Start the game, return to the home screen, or restart after a game over
+- **I**: View instructions
+
+## Release Notes
+
+### Version 0.1.0
+
+- Initial release with core gameplay features, animations, and sound.
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## Acknowledgements
+## Contact
 
-- Inspired by the original 2048 game by Gabriele Cirulli.
-
-Enjoy the game and have fun reaching 2048!
+Developed by [sayhan1610](mailto:sayhanrahman@gokkusagi.k12.tr). Feel free to reach out with any questions or feedback.
